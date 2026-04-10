@@ -375,12 +375,12 @@
             const totalScore = cgpaScore + skillsScore + projectsScore + keySkillsBonus;
             const probability = Math.min(totalScore, 95);
             
-            return probability, {
+            return [probability, {
                 cgpaScore,
                 skillsScore,
                 projectsScore,
                 keySkillsBonus
-            };
+            }];
         }
         
         function analyzeSkillGap(selectedSkills) {
