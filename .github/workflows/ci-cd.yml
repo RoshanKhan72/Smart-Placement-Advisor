@@ -68,18 +68,20 @@ jobs:
       #       DOCKERHUB_USERNAME = your Docker Hub username
       #       DOCKERHUB_TOKEN    = access token (recommended), not your primary password
       #     If either secret is missing, this step skips login/push with exit 0.
+      # Optional: failures here must not fail the job (bad/missing secrets are common during setup).
       - name: Push image to Docker Hub (optional)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           set -e
-          if [ -z "$$DOCKERHUB_USERNAME" ] || [ -z "$$DOCKERHUB_TOKEN" ]; then
+          if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
             echo "::notice title=Docker Hub::Skipping push — set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets to publish the image."
             exit 0
           fi
-          echo "$$DOCKERHUB_TOKEN" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
-          docker tag smart-placement-advisor:latest "$$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
-          docker push "$$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
-          echo "Pushed $$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          docker tag smart-placement-advisor:latest "$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
+          docker push "$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
+          echo "Pushed $DOCKERHUB_USERNAME/smart-placement-advisor:latest"
