@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 # Set page configuration
 st.set_page_config(
@@ -123,7 +122,7 @@ with col1:
                 suggestions.append(f"📚 Improve CGPA above 8.0 → +{int((8.0 - cgpa) * 5)}%")
             
             if num_skills < 4:
-                suggestions.append(f"💡 Learn 2 more skills → +10%")
+                suggestions.append("💡 Learn 2 more skills → +10%")
             
             if num_projects < 3:
                 suggestions.append(f"🚀 Add {3 - num_projects} more projects → +{int((3 - num_projects) * 5)}%")
@@ -220,12 +219,16 @@ if st.session_state.analyzed and 'results' in st.session_state:
     col_prob1, col_prob2, col_prob3 = st.columns([1, 2, 1])
     with col_prob2:
         st.progress(results['probability'] / 100.0)
-        st.markdown(f"<h2 style='text-align: center; margin-top: 1rem;'>"
-                   f"Placement Chance: {results['probability']:.1f}%</h2>", 
-                   unsafe_allow_html=True)
-        st.markdown(f"<h3 style='text-align: center;' class='{category_class}'>"
-                   f"{emoji} Category: {category}</h3>", 
-                   unsafe_allow_html=True)
+        st.markdown(
+            f"<h2 style='text-align: center; margin-top: 1rem;'>"
+            f"Placement Chance: {results['probability']:.1f}%</h2>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"<h3 style='text-align: center;' class='{category_class}'>"
+            f"{emoji} Category: {category}</h3>",
+            unsafe_allow_html=True,
+        )
     
     st.markdown("---")
     
@@ -245,8 +248,10 @@ if st.session_state.analyzed and 'results' in st.session_state:
     
     with col_chart2:
         st.subheader("🏢 Company-wise Predictions")
-        company_data = pd.DataFrame(list(results['company_predictions'].items()), 
-                                  columns=['Company Type', 'Probability'])
+        company_data = pd.DataFrame(
+            list(results['company_predictions'].items()),
+            columns=['Company Type', 'Probability'],
+        )
         
         st.bar_chart(company_data.set_index('Company Type'))
     
