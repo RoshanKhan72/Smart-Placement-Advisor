@@ -48,27 +48,9 @@ jobs:
       - name: Run flake8
         run: flake8 .
 
-      # (e) Smoke test: start Streamlit headlessly, wait for HTTP, then stop
-      #     Confirms imports and startup path work (catches many runtime issues).
+      # (e) Smoke test: script avoids GitHub Actions $$ escaping issues with $! / traps
       - name: Test Streamlit startup (headless)
-        run: |
-          set -e
-          streamlit run app.py \
-            --server.headless true \
-            --server.port 8501 \
-            --server.address 127.0.0.1 &
-          PID=$$!
-          trap 'kill $$PID 2>/dev/null || true; wait $$PID 2>/dev/null || true' EXIT
-          echo "Streamlit PID: $$PID"
-          for i in $$(seq 1 45); do
-            if curl -sf --max-time 2 "http://127.0.0.1:8501/_stcore/health" >/dev/null; then
-              echo "Streamlit health check passed (/_stcore/health)."
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Health endpoint did not respond in time; trying root URL..."
-          curl -sf --max-time 5 "http://127.0.0.1:8501/" >/dev/null
+        run: bash scripts/ci_smoke_streamlit.sh
 
       # (f) Build Docker image locally on the runner (no registry push in this step)
       - name: Build Docker image
