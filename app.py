@@ -42,7 +42,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Title
-st.markdown('<h1 class="main-header">🎯 AI Smart Placement Advisor</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🎯 AI Smart Placement Advisor - CI/CD LIVE DEMO</h1>', unsafe_allow_html=True)
 st.markdown("---")
 
 # Initialize session state
