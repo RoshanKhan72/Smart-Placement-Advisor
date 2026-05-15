@@ -1,0 +1,5 @@
+# Flake8 config for Streamlit apps (long markdown/CSS lines, sidebar spacing).
+[flake8]
+max-line-length = 100
+extend-ignore = E501, W291, W293
+exclude = .git, __pycache__, .venv, .github, .streamlit

@@ -1,0 +1,19 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Version control (not needed inside the image)
+.git
+.github
+
+# Local / IDE
+.venv
+venv
+.env
+.idea
+.vscode
+
+# Streamlit local config (optional)
+.streamlit

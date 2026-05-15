@@ -1,0 +1,87 @@
+# CI/CD for Smart Placement Advisor (Python / Streamlit)
+# -----------------------------------------------------------------------------
+# Triggers: every push and pull request targeting the default integration branch.
+# Pipeline: install deps → lint (flake8) → smoke-test Streamlit → Docker build
+#           → simulated deploy + optional Docker Hub push (when secrets exist).
+# -----------------------------------------------------------------------------
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Minimal permissions; extend if you add OIDC to a cloud provider, GHCR, etc.
+permissions:
+  contents: read
+
+jobs:
+  ci-cd:
+    name: Lint, test, build, deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # (a) Checkout repository code into the runner workspace
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # (b) Install latest stable Python 3.x (resolves to newest 3.x available on the runner)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+
+      # (c) Install application dependencies from requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # (d) Static analysis: install flake8 and scan the project
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run flake8
+        run: flake8 .
+
+      # (e) Smoke test: script avoids GitHub Actions $$ escaping issues with $! / traps
+      - name: Test Streamlit startup (headless)
+        run: bash scripts/ci_smoke_streamlit.sh
+
+      # (f) Build Docker image locally on the runner (no registry push in this step)
+      - name: Build Docker image
+        run: docker build -t smart-placement-advisor:latest .
+
+      # (3) Simple deployment simulation (replace with kubectl / SSH / platform API later)
+      - name: Simulate deployment
+        run: |
+          echo "Deployment simulation: image smart-placement-advisor:latest is ready."
+          echo "Example: docker run -p 8501:8501 smart-placement-advisor:latest"
+          echo "Or: push to a registry and deploy to Kubernetes / ECS / Azure App Service."
+
+      # (3) Optional Docker Hub push — configure repository secrets first:
+      #     Settings → Secrets and variables → Actions → New repository secret
+      #       DOCKERHUB_USERNAME = your Docker Hub username
+      #       DOCKERHUB_TOKEN    = access token (recommended), not your primary password
+      #     If either secret is missing, this step skips login/push with exit 0.
+      # Optional: failures here must not fail the job (bad/missing secrets are common during setup).
+      - name: Push image to Docker Hub (optional)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -e
+          if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "::notice title=Docker Hub::Skipping push — set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets to publish the image."
+            exit 0
+          fi
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          docker tag smart-placement-advisor:latest "$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
+          docker push "$DOCKERHUB_USERNAME/smart-placement-advisor:latest"
+          echo "Pushed $DOCKERHUB_USERNAME/smart-placement-advisor:latest"
