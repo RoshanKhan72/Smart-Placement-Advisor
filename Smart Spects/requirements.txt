@@ -1,0 +1,19 @@
+# Vision Assistant Requirements
+# Install with: pip install -r requirements.txt
+
+# Computer Vision and Image Processing
+opencv-python>=4.8.0
+ultralytics>=8.0.0
+numpy>=1.21.0
+
+# Text-to-Speech
+pyttsx3>=2.90
+
+# Additional utilities
+Pillow>=9.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Development and testing (optional)
+# pytest>=7.0.0
+# pytest-cov>=4.0.0

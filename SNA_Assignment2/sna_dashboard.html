@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SNA Dashboard — GitHub Network</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg: #06090f;
+    --card: #0d1117;
+    --card2: #111820;
+    --border: #1c2a3a;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7fff6b;
+    --accent4: #ffcc00;
+    --text: #c9d8e8;
+    --muted: #4a6070;
+    --red: #e74c3c;
+    --green: #2ecc71;
+    --blue: #3498db;
+    --orange: #f39c12;
+    --purple: #9b59b6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; padding: 28px; max-width: 1200px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  h1 span { color: var(--accent); }
+  .subtitle { font-size: 13px; color: var(--muted); margin-top: 5px; }
+  .header-right {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+    line-height: 2;
+  }
+  .live-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 16px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.c1::before { background: var(--accent); }
+  .stat-card.c2::before { background: var(--accent2); }
+  .stat-card.c3::before { background: var(--accent3); }
+  .stat-card.c4::before { background: var(--accent4); }
+  .stat-card.c5::before { background: var(--purple); }
+  .stat-card.c6::before { background: var(--red); }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+  }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .full { grid-column: 1 / -1; }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .panel-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .network-svg { width: 100%; height: 300px; }
+
+  .degree-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .degree-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text);
+    width: 140px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .degree-bar-wrap {
+    flex: 1; height: 22px;
+    background: #0a1018;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .degree-bar {
+    height: 100%;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    transition: width 1s cubic-bezier(.4,0,.2,1);
+  }
+  .degree-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .cc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .cc-table th {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .cc-table td { padding: 7px 10px; border-bottom: 1px solid #0d1520; }
+  .cc-table tr:hover td { background: #101c28; }
+  .cc-bar-inline {
+    display: inline-block;
+    height: 6px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+  .node-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    background: #101c28;
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  .comm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .comm-card {
+    border-radius: 6px;
+    padding: 14px;
+    border: 1px solid transparent;
+  }
+  .comm-card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .comm-members { display: flex; flex-wrap: wrap; gap: 5px; }
+  .comm-member {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+  }
+
+  .metrics-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .metric-box {
+    flex: 1;
+    min-width: 130px;
+    background: #0a1018;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .metric-box-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .metric-box-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .donut-wrap { display: flex; align-items: center; gap: 24px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 10px; }
+  .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .donut-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .bw-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .bw-edge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text);
+    width: 220px;
+    flex-shrink: 0;
+  }
+  .bw-bar-wrap { flex: 1; height: 18px; background: #0a1018; border-radius: 3px; overflow: hidden; }
+  .bw-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #ff6b35, #ffcc00);
+    display: flex;
+    align-items: center;
+    padding-left: 6px;
+  }
+  .bw-val { font-family: 'Space Mono', monospace; font-size: 9px; color: #000; font-weight: 700; }
+
+  footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-left">
+      <div class="badge">Social Network Analysis — Assignment 2</div>
+      <h1>GitHub <span>Follow</span> Network<br>Analysis Dashboard</h1>
+      <div class="subtitle">GM University · Information Science & Engineering · Girvan-Newman Community Detection</div>
+    </div>
+    <div class="header-right">
+      <div><span class="live-dot"></span>ANALYSIS COMPLETE</div>
+      <div>DATASET: Kaggle CSV Edge List</div>
+      <div>NODES: 10 &nbsp;|&nbsp; EDGES: 14</div>
+      <div>ALGORITHM: Girvan-Newman</div>
+    </div>
+  </header>
+
+  <div class="stats-grid">
+    <div class="stat-card c1"><div class="stat-label">Total Nodes</div><div class="stat-value">10</div><div class="stat-sub">GitHub users</div></div>
+    <div class="stat-card c2"><div class="stat-label">Total Edges</div><div class="stat-value">14</div><div class="stat-sub">Follow connections</div></div>
+    <div class="stat-card c3"><div class="stat-label">Avg Clustering</div><div class="stat-value">0.37</div><div class="stat-sub">Moderate cohesion</div></div>
+    <div class="stat-card c4"><div class="stat-label">Graph Density</div><div class="stat-value">0.31</div><div class="stat-sub">Moderately sparse</div></div>
+    <div class="stat-card c5"><div class="stat-label">Communities</div><div class="stat-value">3</div><div class="stat-sub">Detected groups</div></div>
+    <div class="stat-card c6"><div class="stat-label">Modularity</div><div class="stat-value">0.32</div><div class="stat-sub">Genuine structure</div></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-title">Network Graph</div>
+      <svg class="network-svg" id="netsvg" viewBox="0 0 480 300"></svg>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Degree Distribution</div>
+      <div id="degree-bars"></div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-title">Clustering Coefficient</div>
+      <table class="cc-table">
+        <thead><tr><th>Node</th><th>Local CC</th><th>Visualisation</th></tr></thead>
+        <tbody id="cc-tbody"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Additional Metrics</div>
+      <div class="metrics-row" style="margin-bottom:18px">
+        <div class="metric-box"><div class="metric-box-val">2.8</div><div class="metric-box-label">Avg Degree</div></div>
+        <div class="metric-box"><div class="metric-box-val">3</div><div class="metric-box-label">Diameter</div></div>
+        <div class="metric-box"><div class="metric-box-val">1.93</div><div class="metric-box-label">Avg Path Length</div></div>
+        <div class="metric-box"><div class="metric-box-val" style="color:var(--accent3)">YES</div><div class="metric-box-label">Is Connected</div></div>
+      </div>
+      <div class="panel-title" style="margin-top:4px">Intra vs Inter Edges</div>
+      <div class="donut-wrap">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="44" fill="none" stroke="#1c2a3a" stroke-width="18"/>
+          <circle cx="60" cy="60" r="44" fill="none" stroke="var(--accent3)" stroke-width="18"
+            stroke-dasharray="197 276" stroke-dashoffset="69" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="44" fill="none" stroke="var(--accent2)" stroke-width="18"
+            stroke-dasharray="79 276" stroke-dashoffset="-128" stroke-linecap="round"/>
+          <text x="60" y="56" text-anchor="middle" fill="#fff" font-family="Space Mono" font-size="13" font-weight="700">10/14</text>
+          <text x="60" y="70" text-anchor="middle" fill="#4a6070" font-family="DM Sans" font-size="9">edges</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="donut-legend-item">
+            <div class="donut-dot" style="background:var(--accent3)"></div>
+            <div><div style="font-size:13px;font-weight:600;color:#fff">10 Intra-community</div><div style="font-size:11px;color:var(--muted)">within groups (71%)</div></div>
+          </div>
+          <div class="donut-legend-item">
+            <div class="donut-dot" style="background:var(--accent2)"></div>
+            <div><div style="font-size:13px;font-weight:600;color:#fff">4 Inter-community</div><div style="font-size:11px;color:var(--muted)">between groups (29%)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-title">Girvan-Newman Communities</div>
+      <div class="comm-grid">
+        <div class="comm-card" style="background:#1a0d0b;border-color:#e74c3c44">
+          <div class="comm-card-title" style="color:#e74c3c">● Community 1 — Hub Core</div>
+          <div class="comm-members">
+            <span class="comm-member">nikitavoloboev</span>
+            <span class="comm-member">nfultz</span>
+            <span class="comm-member">denysdovhan</span>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:#4a6070">3 members · tightly connected</div>
+        </div>
+        <div class="comm-card" style="background:#0d1a0d;border-color:#2ecc7144">
+          <div class="comm-card-title" style="color:#2ecc71">● Community 2 — Active Followers</div>
+          <div class="comm-members">
+            <span class="comm-member">ryanrhymes</span>
+            <span class="comm-member">konstantinpavlikhin</span>
+            <span class="comm-member">KrauseFx</span>
+            <span class="comm-member">bevacqua</span>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:#4a6070">4 members · bridge group</div>
+        </div>
+        <div class="comm-card" style="background:#0d1220;border-color:#3498db44">
+          <div class="comm-card-title" style="color:#3498db">● Community 3 — Peripheral</div>
+          <div class="comm-members">
+            <span class="comm-member">okeeffed</span>
+            <span class="comm-member">libhide</span>
+            <span class="comm-member">amoose136</span>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:#4a6070">3 members · low connectivity</div>
+        </div>
+        <div class="comm-card" style="background:#111820;border-color:#1c2a3a">
+          <div class="comm-card-title" style="color:var(--muted)">Modularity Score</div>
+          <div style="font-family:'Space Mono',monospace;font-size:32px;font-weight:700;color:#fff">0.32</div>
+          <div style="font-size:11px;color:var(--accent3);margin-top:4px">✓ Above 0.30 threshold</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Genuine community structure</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Edge Betweenness Centrality</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Edges removed first by Girvan-Newman (highest = bridge edge)</div>
+      <div id="bw-bars"></div>
+    </div>
+  </div>
+
+  <div class="panel full" style="margin-top:4px">
+    <div class="panel-title">Key Findings & Conclusion</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px">
+      <div>
+        <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:8px">Q1 — GRAPH METRICS</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">Network has <b style="color:#fff">10 nodes</b> and <b style="color:#fff">14 edges</b>. Density <b style="color:var(--accent4)">0.31</b> confirms sparse network. Avg clustering <b style="color:var(--accent4)">0.37</b> shows moderate cohesion. <b style="color:var(--accent3)">nikitavoloboev</b> dominates with degree 9. <b style="color:var(--accent3)">nfultz</b> is secondary hub with degree 6.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--accent2);font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:8px">Q2 — COMMUNITY DETECTION</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">Girvan-Newman detected <b style="color:#fff">3 communities</b> with modularity <b style="color:var(--accent2)">0.32</b> — above 0.30 threshold. <b style="color:#fff">71% edges</b> are intra-community. The <b style="color:var(--accent2)">nfultz–nikitavoloboev</b> edge had highest betweenness and was removed first.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--accent3);font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:8px">OVERALL INSIGHT</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">Q1 and Q2 are <b style="color:#fff">fully consistent</b>. High-degree nodes from Q1 are community hubs in Q2. <b style="color:var(--accent3)">nikitavoloboev</b> is the most influential user. Network is <b style="color:#fff">highly centralised</b> — typical of GitHub follow networks.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>SNA Assignment 2 · GM University, Davangere · Information Science & Engineering</div>
+    <div>Dataset: GitHub Follow Network · Source: Kaggle · Algorithm: Girvan-Newman</div>
+  </footer>
+
+</div>
+
+<script>
+const nodes = [
+  { id: "nikitavoloboev",      deg: 9, cc: 0.0  },
+  { id: "nfultz",              deg: 6, cc: 0.27 },
+  { id: "denysdovhan",         deg: 2, cc: 1.0  },
+  { id: "ryanrhymes",          deg: 2, cc: 1.0  },
+  { id: "konstantinpavlikhin", deg: 2, cc: 1.0  },
+  { id: "KrauseFx",            deg: 2, cc: 1.0  },
+  { id: "bevacqua",            deg: 2, cc: 1.0  },
+  { id: "okeeffed",            deg: 1, cc: 0.0  },
+  { id: "libhide",             deg: 1, cc: 0.0  },
+  { id: "amoose136",           deg: 1, cc: 0.0  },
+];
+
+const edges = [
+  ["denysdovhan","nikitavoloboev"],
+  ["denysdovhan","nfultz"],
+  ["okeeffed","nikitavoloboev"],
+  ["ryanrhymes","nfultz"],
+  ["ryanrhymes","nikitavoloboev"],
+  ["konstantinpavlikhin","nikitavoloboev"],
+  ["konstantinpavlikhin","nfultz"],
+  ["KrauseFx","nfultz"],
+  ["KrauseFx","nikitavoloboev"],
+  ["libhide","nikitavoloboev"],
+  ["bevacqua","nfultz"],
+  ["bevacqua","nikitavoloboev"],
+  ["amoose136","nikitavoloboev"],
+  ["nfultz","nikitavoloboev"],
+];
+
+const commColors = {
+  "nikitavoloboev":      "#e74c3c",
+  "nfultz":              "#e74c3c",
+  "denysdovhan":         "#e74c3c",
+  "ryanrhymes":          "#2ecc71",
+  "konstantinpavlikhin": "#2ecc71",
+  "KrauseFx":            "#2ecc71",
+  "bevacqua":            "#2ecc71",
+  "okeeffed":            "#3498db",
+  "libhide":             "#3498db",
+  "amoose136":           "#3498db",
+};
+
+const betweenness = [
+  { edge: "nfultz — nikitavoloboev",        val: 0.62 },
+  { edge: "denysdovhan — nfultz",           val: 0.38 },
+  { edge: "bevacqua — nfultz",              val: 0.35 },
+  { edge: "ryanrhymes — nfultz",            val: 0.33 },
+  { edge: "konstantinpavlikhin — nfultz",   val: 0.33 },
+  { edge: "KrauseFx — nfultz",              val: 0.31 },
+];
+
+// ── NETWORK SVG ───────────────────────────────────────────────
+const svg = document.getElementById("netsvg");
+
+const positions = {
+  "nikitavoloboev":      { x: 240, y: 150 },
+  "nfultz":              { x: 155, y: 120 },
+  "denysdovhan":         { x: 80,  y: 70  },
+  "ryanrhymes":          { x: 55,  y: 170 },
+  "konstantinpavlikhin": { x: 100, y: 240 },
+  "KrauseFx":            { x: 190, y: 265 },
+  "bevacqua":            { x: 310, y: 245 },
+  "okeeffed":            { x: 390, y: 80  },
+  "libhide":             { x: 400, y: 175 },
+  "amoose136":           { x: 370, y: 255 },
+};
+
+// Draw edges
+edges.forEach(([a, b]) => {
+  const pa = positions[a], pb = positions[b];
+  const isInter = commColors[a] !== commColors[b];
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", pa.x); line.setAttribute("y1", pa.y);
+  line.setAttribute("x2", pb.x); line.setAttribute("y2", pb.y);
+  line.setAttribute("stroke", isInter ? "#2a3a4a" : commColors[a] + "55");
+  line.setAttribute("stroke-width", isInter ? "1" : "2");
+  line.setAttribute("stroke-dasharray", isInter ? "4 3" : "none");
+  svg.appendChild(line);
+});
+
+// Draw nodes
+nodes.forEach(n => {
+  const p = positions[n.id];
+  const r = 10 + n.deg * 3;
+  const color = commColors[n.id];
+
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", p.x); circle.setAttribute("cy", p.y);
+  circle.setAttribute("r", r);
+  circle.setAttribute("fill", color + "22");
+  circle.setAttribute("stroke", color);
+  circle.setAttribute("stroke-width", "2");
+  svg.appendChild(circle);
+
+  const short = n.id.length > 10 ? n.id.slice(0, 9) + "…" : n.id;
+  const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  label.setAttribute("x", p.x); label.setAttribute("y", p.y + r + 11);
+  label.setAttribute("text-anchor", "middle");
+  label.setAttribute("fill", "#7a9aaa");
+  label.setAttribute("font-size", "8");
+  label.setAttribute("font-family", "Space Mono");
+  label.textContent = short;
+  svg.appendChild(label);
+
+  const degLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  degLabel.setAttribute("x", p.x); degLabel.setAttribute("y", p.y + 4);
+  degLabel.setAttribute("text-anchor", "middle");
+  degLabel.setAttribute("fill", "#fff");
+  degLabel.setAttribute("font-size", "10");
+  degLabel.setAttribute("font-weight", "700");
+  degLabel.setAttribute("font-family", "Space Mono");
+  degLabel.textContent = n.deg;
+  svg.appendChild(degLabel);
+});
+
+// ── DEGREE BARS ───────────────────────────────────────────────
+const degContainer = document.getElementById("degree-bars");
+const maxDeg = Math.max(...nodes.map(n => n.deg));
+[...nodes].sort((a, b) => b.deg - a.deg).forEach((n, i) => {
+  const pct = (n.deg / maxDeg * 100).toFixed(1);
+  const color = commColors[n.id];
+  const short = n.id.length > 18 ? n.id.slice(0, 17) + "…" : n.id;
+  degContainer.innerHTML += `
+    <div class="degree-row" style="animation-delay:${i * 0.06}s">
+      <div class="degree-name">${short}</div>
+      <div class="degree-bar-wrap">
+        <div class="degree-bar" style="width:${pct}%;background:linear-gradient(90deg,${color}99,${color})">
+          <span class="degree-num">${n.deg}</span>
+        </div>
+      </div>
+    </div>`;
+});
+
+// ── CLUSTERING TABLE ──────────────────────────────────────────
+const tbody = document.getElementById("cc-tbody");
+[...nodes].sort((a, b) => b.cc - a.cc).forEach(n => {
+  const color = commColors[n.id];
+  const barW = Math.round(n.cc * 80);
+  const short = n.id.length > 20 ? n.id.slice(0, 19) + "…" : n.id;
+  tbody.innerHTML += `
+    <tr>
+      <td><span class="node-pill">${short}</span></td>
+      <td style="font-family:'Space Mono',monospace;font-size:11px;color:${n.cc > 0.5 ? '#2ecc71' : n.cc > 0 ? '#ffcc00' : '#4a6070'}">${n.cc.toFixed(4)}</td>
+      <td><span class="cc-bar-inline" style="width:${barW}px;background:${color}88;border:1px solid ${color}"></span></td>
+    </tr>`;
+});
+
+// ── BETWEENNESS BARS ──────────────────────────────────────────
+const bwContainer = document.getElementById("bw-bars");
+betweenness.forEach(b => {
+  const pct = (b.val * 100).toFixed(0);
+  bwContainer.innerHTML += `
+    <div class="bw-row">
+      <div class="bw-edge">${b.edge}</div>
+      <div class="bw-bar-wrap">
+        <div class="bw-bar" style="width:${pct}%">
+          <span class="bw-val">${b.val.toFixed(2)}</span>
+        </div>
+      </div>
+    </div>`;
+});
+</script>
+</body>
+</html>
