@@ -18,6 +18,9 @@ COPY app.py .
 # Streamlit default port
 EXPOSE 8501
 
+# Run the app
+CMD ["streamlit", "run", "app.py", "--server.headless", "true", "--server.port", "8501", "--server.address", "0.0.0.0"]
+
 # --- Run Streamlit bound to all interfaces so the container port is reachable ---
 # --server.headless true avoids browser assumptions in containers; --server.address=0.0.0.0 is required in Docker
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless", "true"]

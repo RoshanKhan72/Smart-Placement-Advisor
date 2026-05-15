@@ -46,7 +46,7 @@ jobs:
         run: pip install flake8
 
       - name: Run flake8
-        run: flake8 app.py --exclude 'SNA_Assignment2,Smart Spects'
+        run: flake8 app.py
 
       # (e) Smoke test: script avoids GitHub Actions $$ escaping issues with $! / traps
       - name: Test Streamlit startup (headless)
