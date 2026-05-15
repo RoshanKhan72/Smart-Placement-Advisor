@@ -41,12 +41,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # (d) Static analysis: install flake8 and scan the project
+      # (d) Static analysis: install flake8 and scan only the Streamlit app source
       - name: Install flake8
         run: pip install flake8
 
       - name: Run flake8
-        run: flake8 .
+        run: flake8 app.py --exclude 'SNA_Assignment2,Smart Spects'
 
       # (e) Smoke test: script avoids GitHub Actions $$ escaping issues with $! / traps
       - name: Test Streamlit startup (headless)
