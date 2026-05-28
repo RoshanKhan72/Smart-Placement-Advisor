@@ -3,10 +3,11 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:latest
-    container_name: smart_placement_mongodb
     ports:
       - "27017:27017"
     restart: unless-stopped
+    logging:
+      driver: none
 
   web:
     build: .
