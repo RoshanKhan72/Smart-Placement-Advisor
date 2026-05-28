@@ -1,0 +1,2 @@
+ cd D:\Projects\Devops_PBL\Smart-Placement-Advisor
+./run.bat

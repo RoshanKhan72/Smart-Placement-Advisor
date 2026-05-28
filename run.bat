@@ -1,7 +1,12 @@
+
+
 @echo off
 echo Starting AI Smart Placement Advisor...
 echo.
-echo The application will open automatically in your browser
+echo Installing dependencies...
+pip install -r requirements.txt
 echo.
-streamlit run app.py --server.headless true --server.open true
+echo Starting backend server...
+start http://127.0.0.1:5000
+python backend.py
 pause

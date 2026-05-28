@@ -13,14 +13,14 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
 # --- Application code ---
-COPY app.py .
+# Copy all necessary backend and frontend files
+COPY backend.py .
+COPY index.html .
+COPY style.css .
+COPY script.js .
 
-# Streamlit default port
-EXPOSE 8501
+# Flask default port
+EXPOSE 5000
 
-# Run the app
-CMD ["streamlit", "run", "app.py", "--server.headless", "true", "--server.port", "8501", "--server.address", "0.0.0.0"]
-
-# --- Run Streamlit bound to all interfaces so the container port is reachable ---
-# --server.headless true avoids browser assumptions in containers; --server.address=0.0.0.0 is required in Docker
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless", "true"]
+# Run the app with gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "backend:app"]
