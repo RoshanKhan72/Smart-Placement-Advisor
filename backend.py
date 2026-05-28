@@ -2,8 +2,29 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from PyPDF2 import PdfReader
 import io
+from pymongo import MongoClient
+from datetime import datetime
 
 app = Flask(__name__, static_folder='.', static_url_path='')
+
+# MongoDB Configuration
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/smart_placement')
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    db = client.get_default_database()
+    history_collection = db['analysis_history']
+    # Trigger a connection test
+    client.admin.command('ping')
+    mongo_status = "Connected successfully"
+    print("\n" + "="*50)
+    print("🚀 SUCCESS: MongoDB Connected Successfully!")
+    print("="*50 + "\n", flush=True)
+except Exception as e:
+    mongo_status = f"Connection failed: {e}"
+    print(f"\n❌ ERROR: MongoDB Connection Failed: {e}\n", flush=True)
+    db = None
+    history_collection = None
+
 
 # Serve the main HTML page
 @app.route('/')
@@ -130,14 +151,52 @@ def analyze():
     company_predictions = company_prediction(cgpa, num_skills, num_projects, selected_skills)
     resume_score = calculate_resume_score(resume_text)
 
-    return jsonify({
+    results = {
         'probability': probability,
         'scoreBreakdown': score_breakdown,
         'missingSkills': missing_skills,
         'suggestions': suggestions,
         'companyPredictions': company_predictions,
         'resumeScore': resume_score
-    })
+    }
+
+    # Save to MongoDB
+    if history_collection is not None:
+        try:
+            history_collection.insert_one({
+                'timestamp': datetime.utcnow(),
+                'inputs': {
+                    'cgpa': cgpa,
+                    'numSkills': num_skills,
+                    'numProjects': num_projects,
+                    'selectedSkills': selected_skills
+                },
+                'results': results
+            })
+            # Remove the _id from results so it's JSON serializable
+            if '_id' in results:
+                del results['_id']
+        except Exception as e:
+            print(f"Error saving to MongoDB: {e}")
+
+    return jsonify(results)
+
+@app.route('/api/db-status', methods=['GET'])
+def db_status():
+    if db is not None:
+        try:
+            client.admin.command('ping')
+            count = history_collection.count_documents({})
+            return jsonify({
+                'status': 'success', 
+                'message': 'MongoDB Connection Confirmation: Connected successfully!', 
+                'uri': MONGO_URI,
+                'documents_saved': count
+            })
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': f'MongoDB Connection Confirmation: Failed to ping server. Error: {e}'})
+    else:
+        return jsonify({'status': 'error', 'message': f'MongoDB Connection Confirmation: Not initialized. {mongo_status}'})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
